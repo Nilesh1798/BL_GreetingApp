@@ -2,15 +2,18 @@ package com.example.GreetingApp.service;
 
 
 
+import com.example.GreetingApp.model.AuthUser;
 import com.example.GreetingApp.model.Greeting;
 
-import com.example.GreetingApp.model.User;
+//
 
 
 
 public interface IGreetingService {
 
-    Greeting addGreeting(User user);
+
+
+    Greeting addGreeting(AuthUser user);
 
     Greeting getGreetingById(long id);
 

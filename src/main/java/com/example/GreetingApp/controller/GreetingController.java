@@ -1,47 +1,53 @@
 package com.example.GreetingApp.controller;
 
 import com.example.GreetingApp.model.Greeting;
-import com.example.GreetingApp.model.User;
+import com.example.GreetingApp.model.AuthUser;
 import com.example.GreetingApp.service.GreetingService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/greetings")
 public class GreetingController {
-    @Autowired
-    private GreetingService service;
 
-   // @PostMapping
-  //  public Greeting createGreeting(@RequestParam(required = false) String firstName, @RequestParam(required = false) String lastName) {
-    //    User user = new User(firstName, lastName);
-      //  return service.addGreeting(user);
-    //}
-    @PostMapping
-    public Greeting createGreeting(@RequestBody User user) {
-        return service.addGreeting(user);
+    private final GreetingService service;
+
+    public GreetingController(GreetingService service) {
+        this.service = service;
     }
 
+    @PostMapping
+    public ResponseEntity<Greeting> createGreeting(@RequestBody AuthUser user) {
+        Greeting greeting = service.addGreeting(user);
+        return ResponseEntity.status(201).body(greeting); // 201 Created
+    }
 
     @GetMapping("/{id}")
-    public Greeting getGreetingById(@PathVariable Long id) {
-        return service.getGreetingById(id);
+    public ResponseEntity<Greeting> getGreetingById(@PathVariable Long id) {
+        Optional<Greeting> greeting = Optional.ofNullable(service.getGreetingById(id));
+
+        return greeting.map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.status(404).body(null)); // 404 if not found
     }
 
     @GetMapping("/all")
-    public List<Greeting> getAllGreetings() {
-        return service.getAllGreetings();
+    public ResponseEntity<List<Greeting>> getAllGreetings() {
+        List<Greeting> greetings = service.getAllGreetings();
+        return ResponseEntity.ok(greetings);
     }
 
     @PutMapping("/{id}")
-    public Greeting updateGreeting(@PathVariable Long id, @RequestParam String message) {
-        return service.updateGreeting(id, message);
+    public ResponseEntity<Greeting> updateGreeting(@PathVariable Long id, @RequestBody String message) {
+        Greeting updatedGreeting = service.updateGreeting(id, message);
+        return ResponseEntity.ok(updatedGreeting);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteGreeting(@PathVariable Long id) {
+    public ResponseEntity<String> deleteGreeting(@PathVariable Long id) {
         service.deleteGreeting(id);
+        return ResponseEntity.ok("Greeting deleted successfully.");
     }
 }
