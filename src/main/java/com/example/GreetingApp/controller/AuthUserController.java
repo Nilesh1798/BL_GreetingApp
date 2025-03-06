@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.Map;
+
+
 
 @RestController
 @RequestMapping("/auth")
@@ -61,8 +64,10 @@ public class AuthUserController {
     @Operation(summary = "Test Authenticated Endpoint", description = "Tests if the provided JWT token is valid.")
     @GetMapping("/test")
     public ResponseEntity<String> testAuthenticatedEndpoint(@RequestHeader("Authorization") String authHeader) {
+
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             logger.warn("⚠️ Missing or malformed Authorization token");
+
             return ResponseEntity.status(400).body("Authorization token is missing or malformed.");
         }
 
@@ -76,5 +81,21 @@ public class AuthUserController {
             logger.warn("❌ JWT token is invalid.");
             return ResponseEntity.status(401).body("JWT token is invalid.");
         }
+
     }
-}
+
+        @Operation(summary = "Forgot Password", description = "Allows users to reset their password by providing their email and a new password.")
+        @PutMapping("/forgotPassword/{email}")
+        public ResponseEntity<String> forgotPassword(@PathVariable String email, @RequestBody Map<String, String> requestBody) {
+            String newPassword = requestBody.get("password");
+            String response = authService.forgotPassword(email, newPassword);
+            return response.startsWith("Password has been changed") ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
+        }
+
+        @Operation(summary = "Reset Password", description = "Allows authenticated users to change their password by providing the current and new password.")
+        @PutMapping("/resetPassword/{email}")
+        public ResponseEntity<String> resetPassword(@PathVariable String email, @RequestParam String currentPassword, @RequestParam String newPassword) {
+            String response = authService.resetPassword(email, currentPassword, newPassword);
+            return response.equals("Password reset successfully!") ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
+        }
+    }
